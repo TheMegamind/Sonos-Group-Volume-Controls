@@ -31,33 +31,25 @@ matching `number` entity (nested under that speaker's existing device card):
   working.
 - Python 3.14+ (matches current HA core requirements).
 
-## Manual installation
+## Installation
 
-This integration isn't distributed through any store yet — install it by
-copying the code directly into your Home Assistant config.
+This integration isn't in the HACS default store yet — add it as a custom
+repository.
 
-1. Copy the `custom_components/sonos_group_volume/` folder from this repo
-   into your Home Assistant config directory, so you end up with:
-   ```
-   <config>/custom_components/sonos_group_volume/
-     __init__.py
-     manifest.json
-     config_flow.py
-     const.py
-     number.py
-     strings.json
-     translations/en.json
-   ```
+1. In Home Assistant: **HACS → ⋮ (top right) → Custom repositories**, add
+   `https://github.com/TheMegamind/ha-sonos-group-volume`, set type to
+   **Integration**, and click **Add**. Then find it in HACS and click
+   **Download**.
 2. Restart Home Assistant (a full restart — not just a config reload —
-   is required for HA to discover a newly added custom integration).
+   is required for HA to pick up a newly added custom integration).
 3. Go to **Settings → Devices & Services → Add Integration**, search for
    **Sonos Group Volume**, and complete the setup (no configuration
    options — it auto-discovers your existing Sonos speakers).
 4. A `number.<speaker>_group_volume` entity should appear for each Sonos
    speaker, nested under that speaker's device card.
 
-To update after pulling new changes, replace the copied folder with the
-latest version and do another full restart.
+To update after new changes are pushed, use HACS's redownload/update option
+followed by another full restart.
 
 ## How it works (brief)
 
