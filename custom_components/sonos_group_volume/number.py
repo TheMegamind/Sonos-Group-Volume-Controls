@@ -194,7 +194,7 @@ class SonosGroupVolumeNumber(NumberEntity):
         if len(members) <= 1:
             level = self._member_volume_level(self._target_entity_id)
             self._attr_available = level is not None
-            self._attr_native_value = None if level is None else round(level * 100)
+            self._attr_native_value = None if level is None else int(level * 100)
             return
 
         levels = [
@@ -202,7 +202,7 @@ class SonosGroupVolumeNumber(NumberEntity):
         ]
         self._attr_available = bool(levels)
         self._attr_native_value = (
-            round((sum(levels) / len(levels)) * 100) if levels else None
+            int((sum(levels) / len(levels)) * 100) if levels else None
         )
 
     async def _async_call_volume_set(self, entity_id: str, volume: float) -> None:
