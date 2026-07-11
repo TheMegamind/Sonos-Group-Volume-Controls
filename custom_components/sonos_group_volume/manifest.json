@@ -1,0 +1,14 @@
+{
+  "domain": "sonos_group_volume",
+  "name": "Sonos Group Volume",
+  "after_dependencies": ["sonos"],
+  "codeowners": ["@TheMegamind"],
+  "config_flow": true,
+  "documentation": "https://github.com/TheMegamind/ha-sonos-group-volume",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/TheMegamind/ha-sonos-group-volume/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}
