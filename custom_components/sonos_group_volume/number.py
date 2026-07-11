@@ -159,12 +159,22 @@ class SonosGroupVolumeNumber(NumberEntity):
         self._unsub_tracking = async_track_state_change_event(
             self.hass, list(entity_ids), self._handle_tracked_state_change
         )
+        _LOGGER.debug(
+            "%s: subscribed to state changes for %s",
+            self.entity_id,
+            sorted(entity_ids),
+        )
 
     @callback
     def _handle_tracked_state_change(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Recompute and publish state on any tracked entity change."""
+        _LOGGER.debug(
+            "%s: state change received for %s",
+            self.entity_id,
+            event.data["entity_id"],
+        )
         self._async_recompute()
         self.async_write_ha_state()
 
