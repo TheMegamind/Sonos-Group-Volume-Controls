@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 
 from homeassistant.components.media_player.const import (
     ATTR_GROUP_MEMBERS,
@@ -25,8 +24,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import MEDIA_PLAYER_DOMAIN, SONOS_PLATFORM, UNIQUE_ID_SUFFIX
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _is_sonos_media_player(entry: er.RegistryEntry) -> bool:
@@ -159,22 +156,12 @@ class SonosGroupVolumeNumber(NumberEntity):
         self._unsub_tracking = async_track_state_change_event(
             self.hass, list(entity_ids), self._handle_tracked_state_change
         )
-        _LOGGER.debug(
-            "%s: subscribed to state changes for %s",
-            self.entity_id,
-            sorted(entity_ids),
-        )
 
     @callback
     def _handle_tracked_state_change(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Recompute and publish state on any tracked entity change."""
-        _LOGGER.debug(
-            "%s: state change received for %s",
-            self.entity_id,
-            event.data["entity_id"],
-        )
         self._async_recompute()
         self.async_write_ha_state()
 
