@@ -1,6 +1,6 @@
 {
-  "domain": "sonos_group_volume",
-  "name": "Sonos Group Volume",
+  "domain": "sonos_group_volume_controls",
+  "name": "Sonos Group Volume Controls",
   "after_dependencies": ["sonos"],
   "codeowners": ["@TheMegamind"],
   "config_flow": true,

@@ -1,4 +1,4 @@
-"""Tests for the Sonos Group Volume config flow."""
+"""Tests for the Sonos Group Volume Controls config flow."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.sonos_group_volume.const import DOMAIN
+from custom_components.sonos_group_volume_controls.const import DOMAIN
 
 
 async def test_user_flow_creates_single_entry(hass: HomeAssistant) -> None:
@@ -23,7 +23,7 @@ async def test_user_flow_creates_single_entry(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Sonos Group Volume"
+    assert result["title"] == "Sonos Group Volume Controls"
 
 
 async def test_second_instance_is_aborted(hass: HomeAssistant) -> None:

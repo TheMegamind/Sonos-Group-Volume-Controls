@@ -1,4 +1,4 @@
-"""Tests for Sonos Group Volume integration setup and unload."""
+"""Tests for Sonos Group Volume Controls integration setup and unload."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.sonos_group_volume.const import DOMAIN
+from custom_components.sonos_group_volume_controls.const import DOMAIN
 
 
 async def test_setup_and_unload_entry(hass: HomeAssistant) -> None:

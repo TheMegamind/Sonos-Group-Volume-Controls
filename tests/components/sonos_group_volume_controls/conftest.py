@@ -1,4 +1,4 @@
-"""Fixtures for Sonos Group Volume tests."""
+"""Fixtures for Sonos Group Volume Controls tests."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from custom_components.sonos_group_volume.const import DOMAIN, UNIQUE_ID_SUFFIX
+from custom_components.sonos_group_volume_controls.const import DOMAIN, UNIQUE_ID_SUFFIX
 
 
 @pytest.fixture(autouse=True)
@@ -72,7 +72,7 @@ def create_sonos_player(
 
 @pytest.fixture
 def setup_integration(hass: HomeAssistant) -> Callable[[], Awaitable[MockConfigEntry]]:
-    """Return a factory that sets up the sonos_group_volume config entry."""
+    """Return a factory that sets up the sonos_group_volume_controls config entry."""
 
     async def _setup() -> MockConfigEntry:
         entry = MockConfigEntry(domain=DOMAIN)

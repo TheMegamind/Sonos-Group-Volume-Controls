@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Sonos Group Volume",
+        "title": "Sonos Group Volume Controls",
         "description": "Create group volume controls for every Sonos player. No further configuration is required — players are discovered automatically."
       }
     }

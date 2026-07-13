@@ -1,4 +1,4 @@
-"""The Sonos Group Volume integration."""
+"""The Sonos Group Volume Controls integration."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ PLATFORMS = [Platform.NUMBER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Sonos Group Volume from a config entry."""
+    """Set up Sonos Group Volume Controls from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

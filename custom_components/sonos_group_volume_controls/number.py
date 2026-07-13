@@ -1,4 +1,4 @@
-"""Number platform for Sonos Group Volume."""
+"""Number platform for Sonos Group Volume Controls."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Sonos Group Volume number entities."""
+    """Set up Sonos Group Volume Controls number entities."""
     entity_registry = er.async_get(hass)
     entity_map: dict[str, SonosGroupVolumeNumber] = {}
 

@@ -1,4 +1,4 @@
-"""Tests for the Sonos Group Volume number platform."""
+"""Tests for the Sonos Group Volume Controls number platform."""
 
 from __future__ import annotations
 

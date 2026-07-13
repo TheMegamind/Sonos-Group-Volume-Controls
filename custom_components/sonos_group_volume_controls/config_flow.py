@@ -1,4 +1,4 @@
-"""Config flow for the Sonos Group Volume integration."""
+"""Config flow for the Sonos Group Volume Controls integration."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from .const import DOMAIN
 
 
 class SonosGroupVolumeConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Sonos Group Volume."""
+    """Handle a config flow for Sonos Group Volume Controls."""
 
     VERSION = 1
 
@@ -20,6 +20,6 @@ class SonosGroupVolumeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the single confirmation step."""
         if user_input is not None:
-            return self.async_create_entry(title="Sonos Group Volume", data={})
+            return self.async_create_entry(title="Sonos Group Volume Controls", data={})
 
         return self.async_show_form(step_id="user")
