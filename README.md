@@ -1,4 +1,4 @@
-# Sonos Group Volume
+# Sonos Group Volume Controls
 
 A custom Home Assistant integration that creates a group volume control entity for each Sonos speaker (or speaker pair) in your system.
 
@@ -23,9 +23,9 @@ For every Sonos `media_player` entity in your system, this integration adds a co
 
 1. In Home Assistant, navigate to **HACS** > **⋮ (three dots)** > **Custom repositories**.
 2. Add [https://github.com/TheMegamind/ha-sonos-group-volume](https://github.com/TheMegamind/ha-sonos-group-volume), set the **Type** to **Integration**, and click **Add**.
-3. Find **Sonos Group Volume** in HACS and click **Download**.
+3. Find **Sonos Group Volume Controls** in HACS and click **Download**.
 4. Restart Home Assistant.
-5. Go to **Settings** > **Devices & Services** > **Add Integration**, search for **Sonos Group Volume**, and complete the setup.
+5. Go to **Settings** > **Devices & Services** > **Add Integration**, search for **Sonos Group Volume Controls**, and complete the setup.
    *Note: There are no configuration options; the integration automatically detects your existing Sonos speakers.*
 6. A `number.<speaker>_group_volume` entity will appear under each speaker's device card.
 
