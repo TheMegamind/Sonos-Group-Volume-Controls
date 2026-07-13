@@ -6,7 +6,9 @@ A custom Home Assistant integration that creates a group volume control entity f
 
 ## What it does
 
-For every Sonos `media_player` entity in your system, this integration adds a corresponding `number` entity, neatly nested within that speaker's existing device card.
+For every Sonos `media_player` entity in your system, this integration adds a corresponding `number` entity, neatly nested within that speaker's existing device card, as follows:
+
+![Group volume control nested within a speaker's device card](assets/control_placement.png)
 
 * **Grouped Speakers:** The entity displays and controls the average volume across all speakers currently in that group.
 * **Ungrouped Speakers:** The entity mirrors that speaker's individual volume 1:1.
