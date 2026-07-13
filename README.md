@@ -1,6 +1,6 @@
 # Sonos Group Volume Controls
 
-A custom Home Assistant integration that creates a controllable group volume entity for each Sonos speaker (or speaker pair) in your system. The control is integrated into the speakers' _existing_ device cards, as shown here:
+A custom Home Assistant integration that creates a controllable group volume entity for each Sonos speaker (or speaker pair) in your system. The controls are integrated into the speakers' _existing_ device cards, as shown here:
 
 ![Group volume control nested within a speaker's device card](assets/control_placement.png)
 
