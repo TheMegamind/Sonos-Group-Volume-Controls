@@ -6,7 +6,7 @@ A custom Home Assistant integration that creates a controllable group volume ent
 
 ___
 
- ***NOTE:** This integration is a **companion** to Home Assistant's native Sonos integration and does **not** replace or modify that integration. It merely exposes "Group Volume" (the average volume across a group) as a controllable entity, much as Sonos does in their own apps. This custom integration can be safely added or removed at any time without detriment to the native Sonos integration.*
+ ***NOTE:** This integration is a **companion** to Home Assistant's native Sonos integration and does **not** replace or modify that integration. It merely exposes "Group Volume" (the average volume across a group) as a controllable entity, as Sonos does in their own apps. This custom integration can be safely added or removed at any time without detriment to the native Sonos integration.*
 
 ___
 
