@@ -16,7 +16,7 @@ Group volume controls are exposed on every speaker (coordinator, member, or ungr
 
 * **Grouped Speakers:** The entity displays and controls the average volume across all speakers currently in that group.
 * **Ungrouped Speakers:** The entity mirrors that speaker's individual volume 1:1.
-* **Coordinator Visibility:** Each entity exposes `group_coordinator` and `group_coordinator_name` attributes, identifying which speaker is currently coordinating the group (or itself, when ungrouped).
+* **Coordinator Visibility:** Each entity exposes `group_coordinator` and `group_coordinator_name` attributes, identifying which speaker is currently coordinating the group (or itself, when ungrouped). Useful for dashboard and automation templating.
 * **Proportional Scaling:** Adjusting the slider on a grouped speaker proportionally scales every member's volume up or down, preserving their relative balance.
 * **Live Updates:** Entities update in real-time as speakers join/leave groups or as volume levels change (via the Sonos app, physical controls, or HA automations).
 * **Display Convention:** Group volume is truncated rather than rounded to match Sonos's native display convention (e.g., 16.9% displays as 16).
