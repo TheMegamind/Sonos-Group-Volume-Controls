@@ -244,6 +244,123 @@ async def test_solo_set_calls_volume_set_directly(
     assert calls[0].data["volume_level"] == pytest.approx(0.7)
 
 
+async def test_coordinator_attributes_when_grouped(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_volume_entity_id: Callable[[str], str | None],
+) -> None:
+    """Coordinator entity_id and name resolve to group_members[0] when grouped."""
+    p1 = create_sonos_player("room_one", "RINCON_ONE", group_members=[])
+    p2 = create_sonos_player("room_two", "RINCON_TWO", group_members=[])
+    members = [p1, p2]
+    hass.states.async_set(
+        p1,
+        "playing",
+        {"volume_level": 0.2, "group_members": members, "friendly_name": "Room One"},
+    )
+    hass.states.async_set(
+        p2,
+        "playing",
+        {"volume_level": 0.4, "group_members": members, "friendly_name": "Room Two"},
+    )
+    await setup_integration()
+
+    entity_id = group_volume_entity_id("RINCON_TWO")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p1
+    assert state.attributes["group_coordinator_name"] == "Room One"
+
+
+async def test_coordinator_attributes_when_solo(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_volume_entity_id: Callable[[str], str | None],
+) -> None:
+    """A solo player is its own coordinator for both entity_id and name."""
+    p1 = create_sonos_player("solo_room", "RINCON_SOLO")
+    hass.states.async_set(
+        p1, "playing", {"volume_level": 0.5, "friendly_name": "Solo Room"}
+    )
+    await setup_integration()
+
+    entity_id = group_volume_entity_id("RINCON_SOLO")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p1
+    assert state.attributes["group_coordinator_name"] == "Solo Room"
+
+
+async def test_coordinator_attributes_update_after_group_change(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_volume_entity_id: Callable[[str], str | None],
+) -> None:
+    """Coordinator attributes recompute immediately after membership changes."""
+    p1 = create_sonos_player("room_one", "RINCON_ONE")
+    p2 = create_sonos_player("room_two", "RINCON_TWO")
+    members = [p1, p2]
+    hass.states.async_set(
+        p1,
+        "playing",
+        {"volume_level": 0.2, "group_members": members, "friendly_name": "Room One"},
+    )
+    hass.states.async_set(
+        p2,
+        "playing",
+        {"volume_level": 0.8, "group_members": members, "friendly_name": "Room Two"},
+    )
+    await setup_integration()
+    entity_id = group_volume_entity_id("RINCON_TWO")
+    assert hass.states.get(entity_id).attributes["group_coordinator"] == p1
+
+    hass.states.async_set(
+        p2,
+        "playing",
+        {"volume_level": 0.8, "group_members": [], "friendly_name": "Room Two"},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p2
+    assert state.attributes["group_coordinator_name"] == "Room Two"
+
+
+async def test_coordinator_name_falls_back_when_unavailable(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_volume_entity_id: Callable[[str], str | None],
+) -> None:
+    """Coordinator name falls back to None if its state is unavailable at read time."""
+    p1 = create_sonos_player("room_one", "RINCON_ONE")
+    p2 = create_sonos_player("room_two", "RINCON_TWO")
+    members = [p1, p2]
+    hass.states.async_set(
+        p1,
+        "playing",
+        {"volume_level": 0.6, "group_members": members, "friendly_name": "Room One"},
+    )
+    hass.states.async_set(
+        p2,
+        "playing",
+        {"volume_level": 0.5, "group_members": members, "friendly_name": "Room Two"},
+    )
+    await setup_integration()
+    entity_id = group_volume_entity_id("RINCON_TWO")
+    assert hass.states.get(entity_id).attributes["group_coordinator_name"] == "Room One"
+
+    hass.states.async_set(p1, "unavailable", {"group_members": members})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p1
+    assert state.attributes["group_coordinator_name"] is None
+
+
 async def test_entity_removed_when_target_removed_from_registry(
     hass: HomeAssistant,
     create_sonos_player: Callable[..., str],

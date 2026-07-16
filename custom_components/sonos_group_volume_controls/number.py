@@ -10,7 +10,12 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_VOLUME_SET, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    SERVICE_VOLUME_SET,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -23,7 +28,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import MEDIA_PLAYER_DOMAIN, SONOS_PLATFORM, UNIQUE_ID_SUFFIX
+from .const import (
+    ATTR_GROUP_COORDINATOR,
+    ATTR_GROUP_COORDINATOR_NAME,
+    MEDIA_PLAYER_DOMAIN,
+    SONOS_PLATFORM,
+    UNIQUE_ID_SUFFIX,
+)
 
 
 def _is_sonos_media_player(entry: er.RegistryEntry) -> bool:
@@ -145,6 +156,42 @@ class SonosGroupVolumeNumber(NumberEntity):
         if level is None:
             return None
         return float(level)
+
+    def _group_coordinator_entity_id(self) -> str:
+        """Return the entity_id of the group coordinator, freshly resolved.
+
+        group_members[0] is guaranteed to be the coordinator: the sonos
+        integration's SonosSpeaker._async_regroup only runs on the speaker
+        that IS the coordinator (guarded by `self.soco.uid == group[0]` in
+        _async_handle_group_event), and it builds sonos_group_entities by
+        iterating the same `group` list index-for-index, so entry 0 is
+        always this speaker's own entity_id.
+        """
+        target_state = self.hass.states.get(self._target_entity_id)
+        members = (
+            list(target_state.attributes.get(ATTR_GROUP_MEMBERS) or [])
+            if target_state is not None
+            else []
+        )
+        if len(members) <= 1:
+            return self._target_entity_id
+        return members[0]
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return the resolved group coordinator's entity_id and name."""
+        coordinator_entity_id = self._group_coordinator_entity_id()
+        coordinator_state = self.hass.states.get(coordinator_entity_id)
+        coordinator_name = (
+            coordinator_state.attributes.get(ATTR_FRIENDLY_NAME)
+            if coordinator_state is not None
+            and coordinator_state.state != STATE_UNAVAILABLE
+            else None
+        )
+        return {
+            ATTR_GROUP_COORDINATOR: coordinator_entity_id,
+            ATTR_GROUP_COORDINATOR_NAME: coordinator_name,
+        }
 
     def _retrack(self, entity_ids: set[str]) -> None:
         """Resubscribe state tracking if the tracked entity set changed."""
