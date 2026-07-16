@@ -12,7 +12,7 @@ ___
 
 ## Control Behavior
 
-Group volume controls are exposed on every speaker (coordinator, member, or ungrouped), not just active coordinators, thus ensuring that all control entities remain continuously active even as system topology changes. In this way, dashboards and automations are able to target a fixed set of entities rather than tracking coordinators and availability.
+Group volume controls are exposed on every speaker (coordinator, member, or ungrouped), **not just active coordinators**, thus ensuring that all control entities remain continuously active even as system topology changes. In this way, dashboards and automations are able to target a fixed set of entities rather than tracking coordinators and availability.
 
 * **Grouped Speakers:** The entity displays and controls the average volume across all speakers currently in that group.
 * **Ungrouped Speakers:** The entity mirrors that speaker's individual volume 1:1.
