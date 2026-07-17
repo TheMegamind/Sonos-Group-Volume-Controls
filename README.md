@@ -52,4 +52,3 @@ Distributed under the MIT License. See `LICENSE` for details.
 * **SONOS** name and logo are trademarks of **Sonos, Inc.**
 * **Home Assistant®** name and logo are trademarks of **Nabu Casa, Inc.**
 * This custom integration is **independently maintained**, and not affiliated with or endorsed by SONOS or Nabu Casa.
-* This project's code and documentation have been reviewed and refined with the assistance of [Claude AI](https://claude.ai) (Anthropic). 
