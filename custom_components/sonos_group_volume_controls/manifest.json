@@ -1,0 +1,14 @@
+{
+  "domain": "sonos_group_volume_controls",
+  "name": "Sonos Group Volume Controls",
+  "after_dependencies": ["sonos"],
+  "codeowners": ["@TheMegamind"],
+  "config_flow": true,
+  "documentation": "https://github.com/TheMegamind/Sonos-Group-Volume-Controls",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/TheMegamind/Sonos-Group-Volume-Controls/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}
