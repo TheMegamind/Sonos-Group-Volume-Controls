@@ -10,7 +10,11 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from custom_components.sonos_group_volume_controls.const import DOMAIN, UNIQUE_ID_SUFFIX
+from custom_components.sonos_group_volume_controls.const import (
+    DOMAIN,
+    GROUP_STATUS_UNIQUE_ID_SUFFIX,
+    UNIQUE_ID_SUFFIX,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -92,6 +96,19 @@ def group_volume_entity_id(hass: HomeAssistant) -> Callable[[str], str | None]:
     def _lookup(target_unique_id: str) -> str | None:
         return entity_registry.async_get_entity_id(
             "number", DOMAIN, f"{target_unique_id}{UNIQUE_ID_SUFFIX}"
+        )
+
+    return _lookup
+
+
+@pytest.fixture
+def group_status_entity_id(hass: HomeAssistant) -> Callable[[str], str | None]:
+    """Return a lookup from a target unique_id to its group status entity_id."""
+    entity_registry = er.async_get(hass)
+
+    def _lookup(target_unique_id: str) -> str | None:
+        return entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{target_unique_id}{GROUP_STATUS_UNIQUE_ID_SUFFIX}"
         )
 
     return _lookup

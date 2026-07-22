@@ -17,6 +17,7 @@ Group volume controls are exposed on every speaker (coordinator, member, or ungr
 * **Grouped Speakers:** The entity displays and controls the average volume across all speakers currently in that group.
 * **Ungrouped Speakers:** The entity mirrors that speaker's individual volume 1:1.
 * **Coordinator Visibility:** Each entity exposes `group_coordinator` and `group_coordinator_name` attributes, identifying which speaker is currently coordinating the group (or itself, when ungrouped). Useful for dashboard and automation templating.
+* **Group Status:** Each speaker also gets a `sensor.<speaker>_group_status` entity reporting its own role — Coordinator, Member, or Ungrouped — making it easy to trigger automations or style dashboards based on a speaker's current position in the group.
 * **Proportional Scaling:** Adjusting the slider on a grouped speaker proportionally scales every member's volume up or down, preserving their relative balance.
 * **Live Updates:** Entities update in real-time as speakers join/leave groups or as volume levels change (via the Sonos app, physical controls, or HA automations).
 * **Display Convention:** Group volume is truncated rather than rounded to match Sonos's native display convention (e.g., 16.9% displays as 16).
@@ -34,7 +35,7 @@ Group volume controls are exposed on every speaker (coordinator, member, or ungr
 4. Restart Home Assistant.
 5. Go to **Settings** > **Devices & Services** > **Add Integration**, search for **Sonos Group Volume Controls**, and complete the setup.
    *Note: There are no configuration options; the integration automatically detects your existing Sonos speakers.*
-6. A `number.<speaker>_group_volume` entity will appear under each speaker's device card.
+6. A `number.<speaker>_group_volume` entity and a `sensor.<speaker>_group_status` entity will appear under each speaker's device card.
 
 ## How it works
 

@@ -12,6 +12,16 @@
       "group_volume": {
         "name": "Group volume"
       }
+    },
+    "sensor": {
+      "group_status": {
+        "name": "Group status",
+        "state": {
+          "coordinator": "Coordinator",
+          "member": "Member",
+          "ungrouped": "Ungrouped"
+        }
+      }
     }
   }
 }
