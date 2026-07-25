@@ -142,18 +142,21 @@ async def test_entity_removed_when_target_removed_from_registry(
     assert hass.states.get(status_entity_id) is None
 
 
-async def test_number_and_sensor_agree_on_coordinator_resolution(
+async def test_sensor_attribute_agrees_with_group_resolution(
     hass: HomeAssistant,
     create_sonos_player: Callable[..., str],
     setup_integration: Callable[[], Awaitable[MockConfigEntry]],
-    group_volume_entity_id: Callable[[str], str | None],
     group_status_entity_id: Callable[[str], str | None],
 ) -> None:
-    """The number and sensor platforms must never disagree about the coordinator.
+    """The sensor's group_coordinator attribute must agree with group_resolution.
 
-    Both consume group_resolution.resolve_group_coordinator_entity_id --
-    this is a regression guard against the two platforms drifting apart
-    if one is ever edited to resolve membership independently.
+    Coordinator resolution now lives solely on SonosGroupStatusSensor -- the
+    number platform no longer resolves or exposes it (see test_number.py's
+    test_group_coordinator_attributes_not_exposed). This guards against the
+    sensor's extra_state_attributes drifting from
+    group_resolution.resolve_group_coordinator_entity_id, and against its
+    "coordinator"/"member" enum state drifting from that same resolution,
+    if the property is ever edited to compute membership independently.
     """
     p1 = create_sonos_player("room_one", "RINCON_ONE", group_members=[])
     p2 = create_sonos_player("room_two", "RINCON_TWO", group_members=[])
@@ -169,14 +172,160 @@ async def test_number_and_sensor_agree_on_coordinator_resolution(
     coordinator_entity_id = resolve_group_coordinator_entity_id(hass, p2)
     assert coordinator_entity_id == p1
 
-    number_entity_id = group_volume_entity_id("RINCON_TWO")
-    number_state = hass.states.get(number_entity_id)
-    assert number_state.attributes["group_coordinator"] == coordinator_entity_id
-
     sensor_p1_entity_id = group_status_entity_id("RINCON_ONE")
     sensor_p2_entity_id = group_status_entity_id("RINCON_TWO")
+
     assert hass.states.get(sensor_p1_entity_id).state == "coordinator"
     assert hass.states.get(sensor_p2_entity_id).state == "member"
-    assert (coordinator_entity_id == p1) == (
-        hass.states.get(sensor_p1_entity_id).state == "coordinator"
+    assert (
+        hass.states.get(sensor_p2_entity_id).attributes["group_coordinator"]
+        == coordinator_entity_id
     )
+
+
+async def test_group_name_format_when_grouped(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_status_entity_id: Callable[[str], str | None],
+) -> None:
+    """group_name is '{coordinator friendly_name} +{count}', count excludes the coordinator."""
+    p1 = create_sonos_player("office", "RINCON_OFFICE", group_members=[])
+    p2 = create_sonos_player("room_two", "RINCON_TWO", group_members=[])
+    p3 = create_sonos_player("room_three", "RINCON_THREE", group_members=[])
+    p4 = create_sonos_player("room_four", "RINCON_FOUR", group_members=[])
+    p5 = create_sonos_player("room_five", "RINCON_FIVE", group_members=[])
+    members = [p1, p2, p3, p4, p5]
+    hass.states.async_set(
+        p1, "playing", {"group_members": members, "friendly_name": "Sonos Office"}
+    )
+    for member in (p2, p3, p4, p5):
+        hass.states.async_set(member, "playing", {"group_members": members})
+    await setup_integration()
+
+    entity_id = group_status_entity_id("RINCON_FIVE")
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p1
+    assert state.attributes["group_coordinator_name"] == "Sonos Office"
+    assert state.attributes["group_name"] == "Sonos Office +4"
+
+
+async def test_group_name_format_when_ungrouped(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_status_entity_id: Callable[[str], str | None],
+) -> None:
+    """group_name for an ungrouped player is just its own friendly_name."""
+    p1 = create_sonos_player("guest_room", "RINCON_GUEST", group_members=[])
+    hass.states.async_set(
+        p1, "playing", {"group_members": [], "friendly_name": "Sonos Guest Room"}
+    )
+    await setup_integration()
+
+    entity_id = group_status_entity_id("RINCON_GUEST")
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p1
+    assert state.attributes["group_coordinator_name"] == "Sonos Guest Room"
+    assert state.attributes["group_name"] == "Sonos Guest Room"
+
+
+async def test_group_attributes_identical_across_members(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_status_entity_id: Callable[[str], str | None],
+) -> None:
+    """group_coordinator/_name/group_name must match across every member's sensor.
+
+    group_name is always built from the coordinator's name and the full
+    group's member count, not speaker-relative, so it must not vary by
+    which member's sensor is read.
+    """
+    p1 = create_sonos_player("room_one", "RINCON_ONE", group_members=[])
+    p2 = create_sonos_player("room_two", "RINCON_TWO", group_members=[])
+    p3 = create_sonos_player("room_three", "RINCON_THREE", group_members=[])
+    members = [p1, p2, p3]
+    hass.states.async_set(
+        p1, "playing", {"group_members": members, "friendly_name": "Sonos Office"}
+    )
+    hass.states.async_set(p2, "playing", {"group_members": members})
+    hass.states.async_set(p3, "playing", {"group_members": members})
+    await setup_integration()
+
+    state_p2 = hass.states.get(group_status_entity_id("RINCON_TWO"))
+    state_p3 = hass.states.get(group_status_entity_id("RINCON_THREE"))
+
+    for key in ("group_coordinator", "group_coordinator_name", "group_name"):
+        assert state_p2.attributes[key] == state_p3.attributes[key]
+
+
+async def test_group_attributes_update_after_group_change(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_status_entity_id: Callable[[str], str | None],
+) -> None:
+    """All three coordinator/group attributes recompute immediately after membership changes."""
+    p1 = create_sonos_player("room_one", "RINCON_ONE", group_members=[])
+    p2 = create_sonos_player("room_two", "RINCON_TWO", group_members=[])
+    members = [p1, p2]
+    hass.states.async_set(
+        p1, "playing", {"group_members": members, "friendly_name": "Room One"}
+    )
+    hass.states.async_set(
+        p2, "playing", {"group_members": members, "friendly_name": "Room Two"}
+    )
+    await setup_integration()
+    entity_id = group_status_entity_id("RINCON_TWO")
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p1
+    assert state.attributes["group_coordinator_name"] == "Room One"
+    assert state.attributes["group_name"] == "Room One +1"
+
+    hass.states.async_set(
+        p2, "playing", {"group_members": [], "friendly_name": "Room Two"}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p2
+    assert state.attributes["group_coordinator_name"] == "Room Two"
+    assert state.attributes["group_name"] == "Room Two"
+
+
+async def test_group_attributes_fallback_when_coordinator_unavailable(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_status_entity_id: Callable[[str], str | None],
+) -> None:
+    """group_coordinator_name/group_name fall back to None if the coordinator is unavailable.
+
+    SonosGroupStatusSensor tracks its resolved coordinator in addition to
+    its own target entity, so p1 (the coordinator) going unavailable must
+    by itself push a repaint of p2's sensor -- no unrelated nudge to p2's
+    own state required.
+    """
+    p1 = create_sonos_player("room_one", "RINCON_ONE", group_members=[])
+    p2 = create_sonos_player("room_two", "RINCON_TWO", group_members=[])
+    members = [p1, p2]
+    hass.states.async_set(
+        p1, "playing", {"group_members": members, "friendly_name": "Room One"}
+    )
+    hass.states.async_set(
+        p2, "playing", {"group_members": members, "friendly_name": "Room Two"}
+    )
+    await setup_integration()
+    entity_id = group_status_entity_id("RINCON_TWO")
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator_name"] == "Room One"
+    assert state.attributes["group_name"] == "Room One +1"
+
+    hass.states.async_set(p1, "unavailable", {"group_members": members})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["group_coordinator"] == p1
+    assert state.attributes["group_coordinator_name"] is None
+    assert state.attributes["group_name"] is None

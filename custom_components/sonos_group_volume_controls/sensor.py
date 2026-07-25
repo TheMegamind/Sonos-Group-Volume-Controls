@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -17,11 +17,20 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import GROUP_STATUS_UNIQUE_ID_SUFFIX, MEDIA_PLAYER_DOMAIN, SONOS_PLATFORM
+from .const import (
+    ATTR_GROUP_COORDINATOR,
+    ATTR_GROUP_COORDINATOR_NAME,
+    ATTR_GROUP_NAME,
+    GROUP_STATUS_UNIQUE_ID_SUFFIX,
+    MEDIA_PLAYER_DOMAIN,
+    SONOS_PLATFORM,
+)
 from .group_resolution import (
     GROUP_STATUS_COORDINATOR,
     GROUP_STATUS_MEMBER,
     GROUP_STATUS_UNGROUPED,
+    resolve_group_coordinator_entity_id,
+    resolve_group_members,
     resolve_group_status,
 )
 
@@ -123,14 +132,12 @@ class SonosGroupStatusSensor(SensorEntity):
         self._attr_device_info = device_info
         self._attr_available = False
         self._attr_native_value = None
+        self._tracked_entity_ids: set[str] = set()
         self._unsub_tracking: CALLBACK_TYPE | None = None
 
     async def async_added_to_hass(self) -> None:
-        """Start tracking the target entity and compute initial state."""
+        """Start tracking the target and its resolved coordinator, and compute initial state."""
         await super().async_added_to_hass()
-        self._unsub_tracking = async_track_state_change_event(
-            self.hass, [self._target_entity_id], self._handle_tracked_state_change
-        )
         self._async_recompute()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -140,11 +147,22 @@ class SonosGroupStatusSensor(SensorEntity):
             self._unsub_tracking = None
         await super().async_will_remove_from_hass()
 
+    def _retrack(self, entity_ids: set[str]) -> None:
+        """Resubscribe state tracking if the tracked entity set changed."""
+        if entity_ids == self._tracked_entity_ids:
+            return
+        if self._unsub_tracking is not None:
+            self._unsub_tracking()
+        self._tracked_entity_ids = entity_ids
+        self._unsub_tracking = async_track_state_change_event(
+            self.hass, list(entity_ids), self._handle_tracked_state_change
+        )
+
     @callback
     def _handle_tracked_state_change(
         self, event: Event[EventStateChangedData]
     ) -> None:
-        """Recompute and publish state on any target state change."""
+        """Recompute and publish state on any tracked entity change."""
         self._async_recompute()
         self.async_write_ha_state()
 
@@ -153,11 +171,55 @@ class SonosGroupStatusSensor(SensorEntity):
         """Recompute native_value from current group membership."""
         target_state = self.hass.states.get(self._target_entity_id)
         if target_state is None or target_state.state == STATE_UNAVAILABLE:
+            self._retrack({self._target_entity_id})
             self._attr_available = False
             self._attr_native_value = None
             return
+
+        coordinator_entity_id = resolve_group_coordinator_entity_id(
+            self.hass, self._target_entity_id
+        )
+        self._retrack({self._target_entity_id, coordinator_entity_id})
 
         self._attr_available = True
         self._attr_native_value = resolve_group_status(
             self.hass, self._target_entity_id
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return the resolved group coordinator's entity_id, name, and group name."""
+        coordinator_entity_id = resolve_group_coordinator_entity_id(
+            self.hass, self._target_entity_id
+        )
+        coordinator_state = self.hass.states.get(coordinator_entity_id)
+        coordinator_name = (
+            coordinator_state.attributes.get(ATTR_FRIENDLY_NAME)
+            if coordinator_state is not None
+            and coordinator_state.state != STATE_UNAVAILABLE
+            else None
+        )
+
+        members = resolve_group_members(self.hass, self._target_entity_id)
+        if len(members) > 1:
+            # Always built from the coordinator's name and the full group's
+            # member count, not speaker-relative, so this is identical
+            # across every member of the group.
+            group_name = (
+                f"{coordinator_name} +{len(members) - 1}"
+                if coordinator_name is not None
+                else None
+            )
+        else:
+            own_state = self.hass.states.get(self._target_entity_id)
+            group_name = (
+                own_state.attributes.get(ATTR_FRIENDLY_NAME)
+                if own_state is not None and own_state.state != STATE_UNAVAILABLE
+                else None
+            )
+
+        return {
+            ATTR_GROUP_COORDINATOR: coordinator_entity_id,
+            ATTR_GROUP_COORDINATOR_NAME: coordinator_name,
+            ATTR_GROUP_NAME: group_name,
+        }

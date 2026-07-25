@@ -10,3 +10,4 @@ GROUP_STATUS_UNIQUE_ID_SUFFIX = "_group_status"
 
 ATTR_GROUP_COORDINATOR = "group_coordinator"
 ATTR_GROUP_COORDINATOR_NAME = "group_coordinator_name"
+ATTR_GROUP_NAME = "group_name"

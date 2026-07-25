@@ -12,7 +12,6 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     SERVICE_VOLUME_SET,
     STATE_UNAVAILABLE,
 )
@@ -28,14 +27,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import (
-    ATTR_GROUP_COORDINATOR,
-    ATTR_GROUP_COORDINATOR_NAME,
-    MEDIA_PLAYER_DOMAIN,
-    SONOS_PLATFORM,
-    UNIQUE_ID_SUFFIX,
-)
-from .group_resolution import resolve_group_coordinator_entity_id
+from .const import MEDIA_PLAYER_DOMAIN, SONOS_PLATFORM, UNIQUE_ID_SUFFIX
 
 
 def _is_sonos_media_player(entry: er.RegistryEntry) -> bool:
@@ -157,24 +149,6 @@ class SonosGroupVolumeNumber(NumberEntity):
         if level is None:
             return None
         return float(level)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str | None]:
-        """Return the resolved group coordinator's entity_id and name."""
-        coordinator_entity_id = resolve_group_coordinator_entity_id(
-            self.hass, self._target_entity_id
-        )
-        coordinator_state = self.hass.states.get(coordinator_entity_id)
-        coordinator_name = (
-            coordinator_state.attributes.get(ATTR_FRIENDLY_NAME)
-            if coordinator_state is not None
-            and coordinator_state.state != STATE_UNAVAILABLE
-            else None
-        )
-        return {
-            ATTR_GROUP_COORDINATOR: coordinator_entity_id,
-            ATTR_GROUP_COORDINATOR_NAME: coordinator_name,
-        }
 
     def _retrack(self, entity_ids: set[str]) -> None:
         """Resubscribe state tracking if the tracked entity set changed."""
