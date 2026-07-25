@@ -26,7 +26,7 @@ Group volume controls are exposed on every speaker (coordinator, member, or ungr
 
 The group status sensor added to each speaker reports the speaker's role—Coordinator, Member, or Ungrouped—and exposes attributes that detail the `group_coordinator` (entity), `group_coordinator_name`, and `group_name`, as shown below. If the speaker is ungrouped, these attributes will reference the speaker itself.
 
-[![Group status sensor attributes](https://github.com/TheMegamind/Sonos-Group-Volume-Controls/raw/main/assets/image2.png)](/TheMegamind/Sonos-Group-Volume-Controls/blob/main/assets/image2.png)
+![Group status sensor attributes](assets/image2.png)
 
 ## Requirements
 
