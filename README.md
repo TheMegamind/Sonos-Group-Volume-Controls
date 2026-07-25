@@ -1,8 +1,8 @@
 # Sonos Group Volume Controls
 
-A custom Home Assistant integration that creates a controllable group volume entity for each Sonos speaker (or speaker pair) in your system. The controls are integrated into the speakers' _existing_ device cards, as shown here:
+[![Group volume and group status controls nested within a speaker's device card](https://github.com/TheMegamind/Sonos-Group-Volume-Controls/raw/main/assets/image1.png)](/TheMegamind/Sonos-Group-Volume-Controls/blob/main/assets/image1.png)
 
-![Group volume control nested within a speaker's device card](assets/control_placement.png)
+In addition, each speaker gets a sensor entity that reports the speaker's role—Coordinator, Member, or Ungrouped—with additional attributes that may be useful when creating templates for automations or dashboards.
 
 ___
 
@@ -16,10 +16,15 @@ Group volume controls are exposed on every speaker (coordinator, member, or ungr
 
 * **Grouped Speakers:** The entity displays and controls the average volume across all speakers currently in that group.
 * **Ungrouped Speakers:** The entity mirrors that speaker's individual volume 1:1.
-* **Group Status:** Each speaker gets a `sensor.<speaker>_group_status` entity reporting its own role — Coordinator, Member, or Ungrouped. It also exposes `group_coordinator`, `group_coordinator_name`, and `group_name` attributes (identical across every member's sensor in the same group) as a convenience for dashboards and automations that would otherwise need to template this from `group_members`.
 * **Proportional Scaling:** Adjusting the slider on a grouped speaker proportionally scales every member's volume up or down, preserving their relative balance.
 * **Live Updates:** Entities update in real-time as speakers join/leave groups or as volume levels change (via the Sonos app, physical controls, or HA automations).
 * **Display Convention:** Group volume is truncated rather than rounded to match Sonos's native display convention (e.g., 16.9% displays as 16).
+
+## Group Status Sensor
+
+The group status sensor added to each speaker reports the speaker's role—Coordinator, Member, or Ungrouped—and exposes attributes that detail the `group_coordinator` (entity), `group_coordinator_name`, and `group_name`, as shown below. If the speaker is ungrouped, these attributes will reference the speaker itself.
+
+[![Group status sensor attributes](https://github.com/TheMegamind/Sonos-Group-Volume-Controls/raw/main/assets/image2.png)](/TheMegamind/Sonos-Group-Volume-Controls/blob/main/assets/image2.png)
 
 ## Requirements
 
