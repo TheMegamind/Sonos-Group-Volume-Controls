@@ -1,6 +1,8 @@
 # Sonos Group Volume Controls
 
-[![Group volume and group status controls nested within a speaker's device card](https://github.com/TheMegamind/Sonos-Group-Volume-Controls/raw/main/assets/image1.png)](/TheMegamind/Sonos-Group-Volume-Controls/blob/main/assets/image1.png)
+A custom Home Assistant integration that creates a controllable group volume entity for each Sonos speaker (or speaker pair) in your system. The controls are integrated into the speakers' _existing_ device cards, as shown here:
+
+![Group volume and group status controls nested within a speaker's device card](assets/image1.png)
 
 In addition, each speaker gets a sensor entity that reports the speaker's role—Coordinator, Member, or Ungrouped—with additional attributes that may be useful when creating templates for automations or dashboards.
 
