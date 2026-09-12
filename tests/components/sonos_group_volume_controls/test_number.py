@@ -11,7 +11,7 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 async def test_solo_player_mirrors_individual_volume(
@@ -295,3 +295,69 @@ async def test_entity_removed_when_target_removed_from_registry(
 
     assert group_volume_entity_id("RINCON_ONE") is None
     assert hass.states.get(group_entity_id) is None
+
+
+async def test_group_volume_entity_attaches_to_target_device(
+    hass: HomeAssistant,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_volume_entity_id: Callable[[str], str | None],
+) -> None:
+    """The group volume entity attaches to the target speaker's own device.
+
+    Regression guard: building DeviceInfo from a copy of the target device's
+    identifiers/connections forks a duplicate device row under our config
+    entry instead of nesting onto the speaker's native device card. The
+    entity must instead resolve onto the same device row as the target.
+    """
+    target_entity_id = create_sonos_player("room_one", "RINCON_ONE", volume_level=0.5)
+    await setup_integration()
+
+    entity_registry = er.async_get(hass)
+    target_device_id = entity_registry.entities[target_entity_id].device_id
+    assert target_device_id is not None
+
+    entity_id = group_volume_entity_id("RINCON_ONE")
+    assert entity_id is not None
+    assert entity_registry.entities[entity_id].device_id == target_device_id
+
+    device_registry = dr.async_get(hass)
+    assert len(device_registry.devices) == 1
+
+
+async def test_group_volume_entity_follows_target_device_after_recreation(
+    hass: HomeAssistant,
+    sonos_config_entry: MockConfigEntry,
+    create_sonos_player: Callable[..., str],
+    setup_integration: Callable[[], Awaitable[MockConfigEntry]],
+    group_volume_entity_id: Callable[[str], str | None],
+) -> None:
+    """The entity re-attaches to a recreated target device after a reload.
+
+    Regression guard for the scenario that broke device attachment: the
+    native sonos integration recreates a speaker's device row (e.g. after a
+    firmware update), and our entity's attachment must follow the target to
+    its new device rather than remaining pinned to whichever device existed
+    when our entity was first created.
+    """
+    target_entity_id = create_sonos_player("room_one", "RINCON_ONE", volume_level=0.5)
+    entry = await setup_integration()
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    original_device_id = entity_registry.entities[target_entity_id].device_id
+
+    new_device = device_registry.async_get_or_create(
+        config_entry_id=sonos_config_entry.entry_id,
+        identifiers={("sonos", "RINCON_ONE_NEW")},
+        name="Room One",
+    )
+    entity_registry.async_update_entity(target_entity_id, device_id=new_device.id)
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = group_volume_entity_id("RINCON_ONE")
+    assert entity_id is not None
+    assert entity_registry.entities[entity_id].device_id == new_device.id
+    assert entity_registry.entities[entity_id].device_id != original_device_id

@@ -12,8 +12,8 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -40,21 +40,6 @@ def _is_sonos_media_player(entry: er.RegistryEntry) -> bool:
     return entry.domain == MEDIA_PLAYER_DOMAIN and entry.platform == SONOS_PLATFORM
 
 
-def _device_info_for_target(
-    hass: HomeAssistant, target_entry: er.RegistryEntry
-) -> DeviceInfo | None:
-    """Build DeviceInfo that nests the new entity into the target's device."""
-    if target_entry.device_id is None:
-        return None
-    device = dr.async_get(hass).async_get(target_entry.device_id)
-    if device is None:
-        return None
-    return DeviceInfo(
-        identifiers=device.identifiers,
-        connections=device.connections,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -66,9 +51,9 @@ async def async_setup_entry(
 
     def _build_entity(target_entry: er.RegistryEntry) -> SonosGroupStatusSensor:
         group_status_entity = SonosGroupStatusSensor(
+            hass=hass,
             target_entity_id=target_entry.entity_id,
             unique_id=f"{target_entry.unique_id}{GROUP_STATUS_UNIQUE_ID_SUFFIX}",
-            device_info=_device_info_for_target(hass, target_entry),
         )
         entity_map[target_entry.entity_id] = group_status_entity
         return group_status_entity
@@ -122,14 +107,14 @@ class SonosGroupStatusSensor(SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         target_entity_id: str,
         unique_id: str,
-        device_info: DeviceInfo | None,
     ) -> None:
         """Initialize the group status entity."""
         self._target_entity_id = target_entity_id
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        self.device_entry = async_entity_id_to_device(hass, target_entity_id)
         self._attr_available = False
         self._attr_native_value = None
         self._tracked_entity_ids: set[str] = set()
